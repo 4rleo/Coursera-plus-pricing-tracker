@@ -2,8 +2,8 @@ name: Coursera Price Tracker
 
 on:
   schedule:
-    - cron: '0 15 * * *'  # cada dia a las 9am CDMX (UTC-6)
-  workflow_dispatch:  # para correrlo manualmente tambien
+    - cron: '0 15 * * *' 
+  workflow_dispatch:  
 
 jobs:
   track:

@@ -18,7 +18,8 @@ def main():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-gpu")
-    options.add_argument("--single-process")
+    options.add_argument("--disable-setuid-sandbox")
+options.add_argument("--remote-debugging-port=9222")
     options.add_argument("--user-agent=Mozilla/5.0         (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
     email = os.getenv("GMAIL_USER")
     app_password = os.getenv("GMAIL_PASSWORD")
@@ -38,10 +39,7 @@ def get_price(options):
     options.binary_location = os.getenv("CHROME_BIN")
     service = Service(os.getenv("CHROMEDRIVER_BIN"))
     driver = webdriver.Chrome(service=service, options=options)
-    try:
-       driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-    "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
-}) driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")
+    try: driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")
         wait = WebDriverWait(driver, 20)
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, "rc-ReactPriceDisplay")))
         

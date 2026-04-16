@@ -19,7 +19,7 @@ def main():
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-gpu")
     options.add_argument("--single-process")
-    
+    options.add_argument("--user-agent=Mozilla/5.0         (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
     email = os.getenv("GMAIL_USER")
     app_password = os.getenv("GMAIL_PASSWORD")
     destiny = "rodriguezcervantessebastian30@gmail.com"

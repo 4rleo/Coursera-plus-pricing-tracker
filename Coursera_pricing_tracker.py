@@ -33,7 +33,7 @@ def main():
         print("No se pudo obtener el precio.")
 
 def get_price(options):
-    service = Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install())
+    service = Service(ChromeDriverManager(driver_version="146.0.7680.177").install())
     driver = webdriver.Chrome(service=service, options=options)
     try:
         driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")

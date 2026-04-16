@@ -40,7 +40,7 @@ def get_price(options):
     service = Service(os.getenv("CHROMEDRIVER_BIN"))
     driver = webdriver.Chrome(service=service, options=options)
     try:
-    driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")
+        driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")
         wait = WebDriverWait(driver, 20)
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, "rc-ReactPriceDisplay")))
         

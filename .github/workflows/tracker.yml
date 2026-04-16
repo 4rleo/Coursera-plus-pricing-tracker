@@ -24,6 +24,7 @@ jobs:
 
       - name: Setup Chrome
         uses: browser-actions/setup-chrome@v2
+        id: setup-chrome
         with:
           chrome-version: 147
           install-chromedriver: true
@@ -32,6 +33,8 @@ jobs:
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+          CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+          CHROMEDRIVER_BIN: ${{ steps.setup-chrome.outputs.chromedriver-path }}
         run: python Coursera_pricing_tracker.py
 
       - name: Commit data.json

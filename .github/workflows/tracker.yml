@@ -22,10 +22,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Install Chromium
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: 147
+          install-chromedriver: true
 
       - name: Run tracker
         env:
@@ -33,11 +34,10 @@ jobs:
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
         run: python Coursera_pricing_tracker.py
 
-      - name: Commit and Push
+      - name: Commit data.json
         run: |
           git config --local user.name "github-actions[bot]"
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          # Si no hay cambios, no truena el workflow
           git commit -m "chore: update data.json [$(date)]" || echo "No changes"
           git push origin master

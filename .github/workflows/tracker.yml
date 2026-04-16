@@ -2,21 +2,23 @@ name: Coursera Price Tracker
 
 on:
   schedule:
-    - cron: '0 15 * * *' 
-  workflow_dispatch:  
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   track:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
-
+      - uses: actions/checkout@v4
+      
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
+          
       - name: Install dependencies
         run: pip install -r requirements.txt
 
@@ -26,12 +28,16 @@ jobs:
           sudo apt-get install -y chromium-browser
 
       - name: Run tracker
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
         run: python Coursera_pricing_tracker.py
 
-      - name: Commit data.json
+      - name: Commit and Push
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git diff --staged --quiet || git commit -m "Update price data"
-          git push
+          # Si no hay cambios, no truena el workflow
+          git commit -m "chore: update data.json [$(date)]" || echo "No changes"
+          git push origin master

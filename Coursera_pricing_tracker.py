@@ -8,8 +8,6 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from email.mime.text import MIMEText
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
 
 def main():
     options = Options()
@@ -19,15 +17,16 @@ def main():
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-setuid-sandbox")
-options.add_argument("--remote-debugging-port=9222")
-    options.add_argument("--user-agent=Mozilla/5.0         (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36"
+    options.add_argument("--remote-debugging-port=9222")
+    options.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36")
+
     email = os.getenv("GMAIL_USER")
     app_password = os.getenv("GMAIL_PASSWORD")
     destiny = "rodriguezcervantessebastian30@gmail.com"
-    
+
     price = get_price(options)
     print(f"Precio detectado: {price}")
-    
+
     if price:
         is_changed = update_json(price)
         if is_changed:
@@ -43,7 +42,7 @@ def get_price(options):
         driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")
         wait = WebDriverWait(driver, 20)
         wait.until(EC.presence_of_element_located((By.CLASS_NAME, "rc-ReactPriceDisplay")))
-        
+
         price_spans = driver.find_elements(By.CLASS_NAME, "rc-ReactPriceDisplay")
         valid_prices = set()
 
@@ -75,11 +74,11 @@ def update_json(price):
                 dataset = []
 
     last_price = dataset[-1]["price"] if dataset else 0
-    
+
     dataset.append(new_entry)
     with open(file_path, "w") as f:
         json.dump(dataset, f, indent=4)
-    
+
     return price != last_price
 
 def send_email(user, pwd, to, price):

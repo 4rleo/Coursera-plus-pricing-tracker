@@ -23,22 +23,18 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Setup Chrome
-        uses: browser-actions/setup-chrome@v2
+        uses: browser-actions/setup-chrome@v3
         id: setup-chrome
         with:
-          chrome-version: 147
           install-chromedriver: true
 
-      - name: Fix permissions and Run
+      - name: Run tracker
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
           CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
           CHROMEDRIVER_BIN: ${{ steps.setup-chrome.outputs.chromedriver-path }}
-        run: |
-          chmod +x $CHROME_BIN
-          chmod +x $CHROMEDRIVER_BIN
-          python Coursera_pricing_tracker.py
+        run: python Coursera_pricing_tracker.py
 
       - name: Commit data.json
         run: |

@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from email.mime.text import MIMEText
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 
 def main():
     options = Options()
@@ -32,7 +33,7 @@ def main():
         print("No se pudo obtener el precio.")
 
 def get_price(options):
-    service = Service(ChromeDriverManager().install())
+    service = Service(ChromeDriverManager(chrome_type=ChromeType.GOOGLE).install())
     driver = webdriver.Chrome(service=service, options=options)
     try:
         driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")

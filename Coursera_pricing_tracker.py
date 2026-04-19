@@ -83,7 +83,7 @@ def sendEmail(email, app_password, destiny, price):
     <html>
     <body style="font-family: Arial, sans-serif; padding: 20px;">
         <div style="max-width: 500px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
-            <h2 style="color: #2c3e50;">🚀 ¡Oportunidad en Coursera Plus!</h2>
+            <h2 style="color: #2c3e50;">¡Hemos detectado un cambio en Coursera Plus!</h2>
             <p style="font-size: 16px;">El precio actualizado es de: <b style="color: #27ae60;">${price} MXN</b></p>
             <div style="margin-top: 20px;">
                 <a href="https://www.coursera.org/courseraplus" 
@@ -97,7 +97,7 @@ def sendEmail(email, app_password, destiny, price):
     </html>
     """
     msg = MIMEText(html, "html", "utf-8")
-    msg["Subject"] = f"🔥 Coursera Plus: ${price} MXN"
+    msg["Subject"] = f" Coursera Plus: ${price} MXN"
     msg["From"] = email
     msg["To"] = destiny
     

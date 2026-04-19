@@ -33,6 +33,10 @@ def get_price():
             if cookies_raw:
                 cookies = json.loads(cookies_raw)
                 context = browser.new_context()
+                for c in cookies:
+                    if "sameSite" in c:
+                        if c["sameSite"].lower() in ["no_restriction", "unspecified"]:
+                            c["sameSite"] = "None"
                 context.add_cookies(cookies)
                 page = context.new_page()
             else:

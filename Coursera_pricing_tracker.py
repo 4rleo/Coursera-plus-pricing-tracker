@@ -26,12 +26,12 @@ def get_price():
         page = browser.new_page()
         try:
             page.goto("https://www.coursera.org/courseraplus/special/latam-spring-2026-40", wait_until="networkidle")
-            page.wait_for_selector(".rc-ReactPriceDisplay", timeout=15000)
-            
-            spans = page.query_selector_all(".rc-ReactPriceDisplay")
-            precios_validos = set()
             with open("debug.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
+            page.wait_for_selector(".rc-ReactPriceDisplay", timeout=15000)
+            spans = page.query_selector_all(".rc-ReactPriceDisplay")
+            precios_validos = set()
+            
             for span in spans:
                 texto = span.inner_text().strip()
                 numero = re.sub(r"[^\d]", "", texto)

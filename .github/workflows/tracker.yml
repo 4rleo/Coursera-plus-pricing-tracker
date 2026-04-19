@@ -24,12 +24,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-          pip install playwright
-
-      - name: Install Playwright browsers
-        run: |
-          python -m playwright install chromium
-          python -m playwright install-deps chromium
+          pip install requests
 
       - name: Run tracker
         env:
@@ -37,14 +32,6 @@ jobs:
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
           COURSERA_COOKIES: ${{ secrets.COURSERA_COOKIES }}
         run: python Coursera_pricing_tracker.py
-
-      
-      - name: Upload debug HTML
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-html
-          path: debug.html
 
       - name: Commit data.json
         run: |

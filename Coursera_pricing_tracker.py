@@ -30,6 +30,8 @@ def get_price():
                 for cookie in cookies:
                     if cookie.get("sameSite") not in ("Strict", "Lax", "None"):
                         cookie["sameSite"] = "Lax"
+                    if "partitionKey" in cookie:
+                        del cookie["partitionKey"]
                 context = browser.new_context()
                 context.add_cookies(cookies)
                 page = context.new_page()
@@ -55,7 +57,7 @@ def get_price():
             return None
         finally:
             browser.close()
-            
+
 def update_json_and_check_diff(price):
     file_path = os.path.join(os.path.dirname(__file__), "data.json")
     new_entry = {"price": price, "date": str(date.today())}

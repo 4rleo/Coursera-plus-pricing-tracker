@@ -25,7 +25,7 @@ def get_price():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
-            page.goto("https://www.coursera.org/courseraplus/special/latam-spring-2026-40", wait_until="networkidle")
+            page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
             with open("debug.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             page.wait_for_selector(".rc-ReactPriceDisplay", timeout=15000)

@@ -27,8 +27,10 @@ def get_price():
         context = browser.new_context(
             locale="es-MX",
             timezone_id="America/Mexico_City",
-            geolocation={"latitude": 19.4326, "longitude": -99.1332},
-            permissions=["geolocation"]
+            extra_http_headers={
+                "Accept-Language": "es-MX,es;q=0.9",
+                "X-Forwarded-For": "189.203.0.1"  # IP mexicana de Telmex
+            }
         )
         
         try:

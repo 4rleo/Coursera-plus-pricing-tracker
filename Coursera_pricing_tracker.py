@@ -22,34 +22,26 @@ def main():
 
 def get_price():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True, proxy={
-            "server": "http://mx-proxy:port",
-            "username": "user",
-            "password": "pass"
-        })
-        page = browser.new_page()
+        browser = p.chromium.launch(headless=True)
         try:
             cookies_raw = os.getenv("COURSERA_COOKIES")
             if cookies_raw:
                 cookies = json.loads(cookies_raw)
-                
                 for cookie in cookies:
                     if cookie.get("sameSite") not in ("Strict", "Lax", "None"):
                         cookie["sameSite"] = "Lax"
                 context = browser.new_context()
                 context.add_cookies(cookies)
                 page = context.new_page()
-                context.add_cookies(cookies)
-                page = context.new_page()
             else:
                 page = browser.new_page()
+
             page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
             with open("debug.html", "w", encoding="utf-8") as f:
                 f.write(page.content())
             page.wait_for_selector(".rc-ReactPriceDisplay", timeout=15000)
             spans = page.query_selector_all(".rc-ReactPriceDisplay")
             precios_validos = set()
-            
             for span in spans:
                 texto = span.inner_text().strip()
                 numero = re.sub(r"[^\d]", "", texto)
@@ -57,14 +49,13 @@ def get_price():
                     precio = int(numero)
                     if 2000 <= precio <= 5000:
                         precios_validos.add(precio)
-            
             return min(precios_validos) if precios_validos else None
         except Exception as e:
             print(f"Error en Playwright: {e}")
             return None
         finally:
             browser.close()
-
+            
 def update_json_and_check_diff(price):
     file_path = os.path.join(os.path.dirname(__file__), "data.json")
     new_entry = {"price": price, "date": str(date.today())}

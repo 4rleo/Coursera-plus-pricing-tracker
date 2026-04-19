@@ -22,7 +22,11 @@ def main():
 
 def get_price():
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        browser = p.chromium.launch(headless=True, proxy={
+            "server": "http://mx-proxy:port",
+            "username": "user",
+            "password": "pass"
+        })
         page = browser.new_page()
         try:
             page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")

@@ -30,7 +30,8 @@ def get_price():
             
             spans = page.query_selector_all(".rc-ReactPriceDisplay")
             precios_validos = set()
-            print(page.content()[:1000])
+            with open("debug.html", "w", encoding="utf-8") as f:
+                f.write(page.content())
             for span in spans:
                 texto = span.inner_text().strip()
                 numero = re.sub(r"[^\d]", "", texto)

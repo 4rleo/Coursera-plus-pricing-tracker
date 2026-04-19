@@ -55,7 +55,10 @@ def get_price():
             
             page = context.new_page()
             page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
-            
+            html = page.content()
+            with open("debug.html", "w", encoding="utf-8") as f:
+                f.write(html)
+
             
             page.wait_for_selector(".rc-ReactPriceDisplay", timeout=20000)
             

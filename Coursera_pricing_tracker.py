@@ -22,36 +22,61 @@ def main():
 
 def get_price():
     with sync_playwright() as p:
+        
         browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
+        
         try:
             cookies_raw = os.getenv("COURSERA_COOKIES")
             if cookies_raw:
                 cookies = json.loads(cookies_raw)
+                cookies_limpias = []
+                
                 for cookie in cookies:
-                    if cookie.get("sameSite") not in ("Strict", "Lax", "None"):
-                        cookie["sameSite"] = "Lax"
-                    if "partitionKey" in cookie:
-                        del cookie["partitionKey"]
-                context = browser.new_context()
-                context.add_cookies(cookies)
-                page = context.new_page()
-            else:
-                page = browser.new_page()
-
+                    
+                    c = {
+                        "name": cookie["name"],
+                        "value": cookie["value"],
+                        "domain": cookie["domain"],
+                        "path": cookie["path"],
+                        "secure": cookie["secure"],
+                        "httpOnly": cookie["httpOnly"],
+                        "sameSite": cookie.get("sameSite", "Lax")
+                    }
+                    
+                    if c["sameSite"] not in ["Strict", "Lax", "None"]:
+                        c["sameSite"] = "Lax"
+                    
+                    cookies_limpias.append(c)
+                
+                context.add_cookies(cookies_limpias)
+            
+            page = context.new_page()
             page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
-            with open("debug.html", "w", encoding="utf-8") as f:
-                f.write(page.content())
-            page.wait_for_selector(".rc-ReactPriceDisplay", timeout=15000)
+            
+            
+            page.wait_for_selector(".rc-ReactPriceDisplay", timeout=20000)
+            
             spans = page.query_selector_all(".rc-ReactPriceDisplay")
             precios_validos = set()
+            
             for span in spans:
                 texto = span.inner_text().strip()
+                
                 numero = re.sub(r"[^\d]", "", texto)
                 if numero:
+                    
                     precio = int(numero)
-                    if 2000 <= precio <= 5000:
+                    if precio > 10000: # 
+                         precio = precio // 100
+                         
+                    if 2000 <= precio <= 7000:
                         precios_validos.add(precio)
+            
             return min(precios_validos) if precios_validos else None
+
         except Exception as e:
             print(f"Error en Playwright: {e}")
             return None
@@ -70,13 +95,15 @@ def update_json_and_check_diff(price):
             except:
                 dataset = []
 
-    last_price = dataset[-1]["price"] if dataset else 4590
+    
+    last_price = dataset[-1]["price"] if dataset else 0
     dataset.append(new_entry)
     
     with open(file_path, "w") as f:
         json.dump(dataset, f, indent=4)
     
-    return price != last_price
+    
+    return price != last_price and last_price != 0
 
 def sendEmail(email, app_password, destiny, price):
     if not email or not app_password:
@@ -86,16 +113,22 @@ def sendEmail(email, app_password, destiny, price):
     html = f"""
     <html>
     <body style="font-family: Arial, sans-serif; padding: 20px;">
-        <div style="max-width: 500px; margin: auto; border: 1px solid #eee; padding: 20px;">
-            <h2 style="color: #2c3e50;">¡Alerta de Precio!</h2>
-            <p>El precio de Coursera Plus es ahora: <b>${price} MXN</b></p>
-            <a href="https://www.coursera.org/courseraplus" style="background: #3498db; color: white; padding: 10px; text-decoration: none;">Ver Oferta</a>
+        <div style="max-width: 500px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #2c3e50;">¡Oportunidad en Coursera Plus!</h2>
+            <p style="font-size: 16px;">El precio actualizado es de: <b style="color: #27ae60;">${price} MXN</b></p>
+            <div style="margin-top: 20px;">
+                <a href="https://www.coursera.org/courseraplus" 
+                   style="background: #2980b9; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                   Ir a Coursera Plus
+                </a>
+            </div>
+            <p style="color: #7f8c8d; font-size: 12px; margin-top: 30px;">Este es un aviso automático de tu script de monitoreo.</p>
         </div>
     </body>
     </html>
     """
     msg = MIMEText(html, "html", "utf-8")
-    msg["Subject"] = "🚀 Coursera Price Alert"
+    msg["Subject"] = f"🔥 Coursera Plus: ${price} MXN"
     msg["From"] = email
     msg["To"] = destiny
     

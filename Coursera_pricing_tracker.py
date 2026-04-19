@@ -8,6 +8,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from email.mime.text import MIMEText
+import time
+
 
 def main():
     options = Options()
@@ -40,14 +42,20 @@ def get_price(options):
     driver = webdriver.Chrome(service=service, options=options)
     try:
         driver.get("https://www.coursera.org/courseraplus/special/latam-spring-2026-40")
+        time.sleep(5)
         wait = WebDriverWait(driver, 20)
-        wait.until(EC.presence_of_element_located((By.CLASS_NAME, "rc-ReactPriceDisplay")))
-
-        price_spans = driver.find_elements(By.CLASS_NAME, "rc-ReactPriceDisplay")
+        wait.until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "rc-ReactPriceDisplay")))
+        wait.until(lambda d: any(el.text.strip() != "" for el in d.find_elements(By.CLASS_NAME, "rc-ReactPriceDisplay")))
+        print("PAGE TITLE:", driver.title)
+        print("HTML sample:", driver.page_source[:500])
+        textos = driver.execute_script("""
+            return Array.from(document.querySelectorAll('.rc-ReactPriceDisplay'))
+           .map(el => el.innerText);
+            """)
         valid_prices = set()
 
-        for span in price_spans:
-            text = span.text.strip()
+        for text in textos:
+            text = text.strip()
             num = re.sub(r"[^\d]", "", text)
             if num:
                 p = int(num)

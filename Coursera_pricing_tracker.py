@@ -32,11 +32,13 @@ def get_price():
             cookies_raw = os.getenv("COURSERA_COOKIES")
             if cookies_raw:
                 cookies = json.loads(cookies_raw)
+                
+                for cookie in cookies:
+                    if cookie.get("sameSite") not in ("Strict", "Lax", "None"):
+                        cookie["sameSite"] = "Lax"
                 context = browser.new_context()
-                for c in cookies:
-                    if "sameSite" in c:
-                        if c["sameSite"].lower() in ["no_restriction", "unspecified"]:
-                            c["sameSite"] = "None"
+                context.add_cookies(cookies)
+                page = context.new_page()
                 context.add_cookies(cookies)
                 page = context.new_page()
             else:

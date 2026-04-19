@@ -9,7 +9,7 @@ def main():
     app_password = os.getenv("GMAIL_PASSWORD")
     destiny = "rodriguezcervantessebastian30@gmail.com"
     
-    api_url = "Thttps://api.stripe.com/v1/elements/sessions?client_secret=pi_3TNpPbBEfO1jc2fn05JSJTfJ_secret_2FcOJ5pC70eaxCga7Gh2zI0id&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=ede13da8-7229-4982-a03f-4bdb111312f5&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent" 
+    api_url = "https://api.stripe.com/v1/elements/sessions?client_secret=pi_3TNpPbBEfO1jc2fn05JSJTfJ_secret_2FcOJ5pC70eaxCga7Gh2zI0id&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=ede13da8-7229-4982-a03f-4bdb111312f5&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent" 
     
     price = get_price(api_url)
     print(f"Precio detectado: {price}")

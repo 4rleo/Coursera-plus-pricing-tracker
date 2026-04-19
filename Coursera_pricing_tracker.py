@@ -29,6 +29,14 @@ def get_price():
         })
         page = browser.new_page()
         try:
+            cookies_raw = os.getenv("COURSERA_COOKIES")
+            if cookies_raw:
+                cookies = json.loads(cookies_raw)
+                context = browser.new_context()
+                context.add_cookies(cookies)
+                page = context.new_page()
+            else:
+                page = browser.new_page()
             page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
             with open("debug.html", "w", encoding="utf-8") as f:
                 f.write(page.content())

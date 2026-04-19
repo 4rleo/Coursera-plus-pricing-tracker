@@ -11,8 +11,10 @@ permissions:
 jobs:
   track:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -20,11 +22,12 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Install Playwright
         run: |
+          pip install -r requirements.txt
           pip install playwright
+
+      - name: Install Playwright browsers
+        run: |
           python -m playwright install chromium
           python -m playwright install-deps chromium
 
@@ -33,6 +36,14 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
         run: python Coursera_pricing_tracker.py
+
+      
+      - name: Upload debug HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-html
+          path: debug.html
 
       - name: Commit data.json
         run: |

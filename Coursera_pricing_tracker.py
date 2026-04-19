@@ -25,7 +25,10 @@ def get_price():
         
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            locale="es-MX",
+            timezone_id="America/Mexico_City",
+            geolocation={"latitude": 19.4326, "longitude": -99.1332},
+            permissions=["geolocation"]
         )
         
         try:

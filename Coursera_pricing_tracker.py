@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 def main():
     email = os.getenv("GMAIL_USER")
     app_password = os.getenv("GMAIL_PASSWORD")
-    destiny = "rodriguezcervantessebastian30@gmail.com"
+    destiny = os.getenv("GMAIL_DESTINY")
     
     api_url = "https://api.stripe.com/v1/elements/sessions?client_secret=pi_3TNpPbBEfO1jc2fn05JSJTfJ_secret_2FcOJ5pC70eaxCga7Gh2zI0id&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=ede13da8-7229-4982-a03f-4bdb111312f5&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent" 
     
@@ -76,7 +76,7 @@ def update_json_and_check_diff(price):
     return price != last_price and last_price != 0
 
 def sendEmail(email, app_password, destiny, price):
-    if not email or not app_password:
+    if not email or not app_password or not destiny:
         return
     
     html = f"""
@@ -96,16 +96,19 @@ def sendEmail(email, app_password, destiny, price):
     </body>
     </html>
     """
+    
     msg = MIMEText(html, "html", "utf-8")
-    msg["Subject"] = f" Coursera Plus: ${price} MXN"
+    msg["Subject"] = f"Coursera Plus: ${price} MXN"
     msg["From"] = email
     msg["To"] = destiny
+    
+    recipient_list = [d.strip() for d in destiny.split(",")]
     
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
             server.login(email, app_password)
-            server.send_message(msg)
+            server.send_message(msg, to_addrs=recipient_list)
     except Exception as e:
         print(f"Error: {e}")
 

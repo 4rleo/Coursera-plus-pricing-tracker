@@ -66,7 +66,10 @@ def get_price():
 def intercept_stripe_url(clean_cookies):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context()
+        context = browser.new_context(
+            locale="es-MX",
+            extra_http_headers={"Accept-Language": "es-MX,es;q=0.9"}
+        )
         context.add_cookies(clean_cookies)
         page = context.new_page()
 

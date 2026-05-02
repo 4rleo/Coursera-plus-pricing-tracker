@@ -3,8 +3,7 @@ from datetime import date
 import os, json
 import requests
 from email.mime.text import MIMEText
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
+
 
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")
@@ -12,6 +11,7 @@ GMAIL_DESTINIES = os.getenv("GMAIL_DESTINIES")
 GMAIL_ERROR_DESTINY = os.getenv("GMAIL_ERROR_DESTINY")
 COURSERA_COOKIES = os.getenv("COURSERA_COOKIES")
 DATA_FILE = os.path.join(os.path.dirname(__file__), "data.json")
+COURSERA_CART_URL = "https://www.coursera.org/api/carts.v2/665807904"
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
         print(f"Precio detectado: {price}")
 
         if price is None:
-            raise ValueError("No se pudo obtener el precio desde la API de Stripe.")
+            raise ValueError("No se pudo obtener el precio.")
 
         save_price(price)
         send_price_alert(price)
@@ -36,71 +36,24 @@ def get_price():
 
     raw_cookies = json.loads(COURSERA_COOKIES)
     cookies_dict = {c["name"]: c["value"] for c in raw_cookies}
-    clean_cookies = normalize_cookies(raw_cookies)    
-    stripe_url = intercept_stripe_url(clean_cookies)
-    print(stripe_url)
-    stripe_url = stripe_url.replace("locale=en-US", "locale=es-LA")
-    print(stripe_url)
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "es-MX,es;q=0.9",
-        "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest",
         "Referer": "https://www.coursera.org/courseraplus",
     }
 
-    response = requests.get(stripe_url, headers=headers, cookies=cookies_dict, timeout=15)
+    response = requests.get(COURSERA_CART_URL, headers=headers, cookies=cookies_dict, timeout=15)
+    print(f"Status: {response.status_code}")
+    print(f"Response: {response.json()}")
 
     if response.status_code != 200:
-        raise ConnectionError(f"Stripe respondió con status {response.status_code}")
+        raise ConnectionError(f"Coursera respondió con status {response.status_code}")
 
     data = response.json()
-    payment_intent = data.get("payment_method_preference", {}).get("payment_intent", {})
-    amount_cents = payment_intent.get("amount")
-    currency = payment_intent.get("currency")
+    print(data)
 
-    if not amount_cents or currency != "mxn":
-        raise ValueError(f"Precio no encontrado o moneda inesperada: currency={currency}, amount={amount_cents}")
-
-    return amount_cents / 100
-
-
-def intercept_stripe_url(clean_cookies):
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            locale="es-MX",
-            extra_http_headers={"Accept-Language": "es-MX,es;q=0.9"}
-        )
-        context.add_cookies(clean_cookies)
-        page = context.new_page()
-
-        page.goto("https://www.coursera.org/courseraplus")
-        text = page.locator(".css-j90x6z").inner_text()
-        print(text)
-        try:
-            page.click("button.css-j90x6z", timeout=10000)
-            
-        except PlaywrightTimeoutError:
-            browser.close()
-            raise RuntimeError(
-                "No se encontró el botón de checkout. "
-                "Posiblemente las cookies caducaron o el layout de Coursera cambió."
-            )
-
-        with page.expect_request("**/api.stripe.com/**") as stripe_request:
-            pass
-
-        url = stripe_request.value.url
-        browser.close()
-        return url
-
-def force_locale(url, locale="es-LA"):
-    parsed = urlparse(url)
-    params = parse_qs(parsed.query, keep_blank_values=True)
-    params["locale"] = [locale]
-    new_query = urlencode(params, doseq=True)
-    return urlunparse(parsed._replace(query=new_query))
+    raise NotImplementedError("Revisa el print del JSON y dime la estructura para extraer el precio")
 
 
 def save_price(price):

@@ -4,7 +4,7 @@ import os, json
 import requests
 from email.mime.text import MIMEText
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
-
+from urllib.parse import urlparse, urlencode, parse_qs, urlunparse
 
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")
@@ -36,9 +36,10 @@ def get_price():
 
     raw_cookies = json.loads(COURSERA_COOKIES)
     cookies_dict = {c["name"]: c["value"] for c in raw_cookies}
-    clean_cookies = normalize_cookies(raw_cookies)
+    clean_cookies = normalize_cookies(raw_cookies)    
     stripe_url = intercept_stripe_url(clean_cookies)
-
+    stripe_url = force_locale(stripe_url)
+    
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "es-MX,es;q=0.9",
@@ -90,6 +91,13 @@ def intercept_stripe_url(clean_cookies):
         url = stripe_request.value.url
         browser.close()
         return url
+
+def force_locale(url, locale="es-LA"):
+    parsed = urlparse(url)
+    params = parse_qs(parsed.query, keep_blank_values=True)
+    params["locale"] = [locale]
+    new_query = urlencode(params, doseq=True)
+    return urlunparse(parsed._replace(query=new_query))
 
 
 def save_price(price):

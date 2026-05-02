@@ -44,16 +44,24 @@ def get_price():
     }
 
     response = requests.get(COURSERA_CART_URL, headers=headers, cookies=cookies_dict, timeout=15)
-    print(f"Status: {response.status_code}")
-    print(f"Response: {response.json()}")
 
     if response.status_code != 200:
         raise ConnectionError(f"Coursera respondió con status {response.status_code}")
 
     data = response.json()
-    print(data)
+    elements = data.get("elements", [])
 
-    raise NotImplementedError("Revisa el print del JSON y dime la estructura para extraer el precio")
+    if not elements:
+        raise ValueError("No se encontraron elementos en el carrito.")
+
+    cart = elements[0]
+    price = cart.get("totalCartAmount")
+    currency = cart.get("currencyCode", "").upper()
+
+    if not price or currency != "MXN":
+        raise ValueError(f"Precio no encontrado o moneda inesperada: currency={currency}, amount={price}")
+
+    return price
 
 
 def save_price(price):
@@ -70,27 +78,6 @@ def save_price(price):
 
     with open(DATA_FILE, "w") as f:
         json.dump(dataset, f, indent=4)
-
-
-def normalize_cookies(cookies_list):
-    result = []
-    for c in cookies_list:
-        clean = {
-            "name": c["name"],
-            "value": c["value"],
-            "domain": c.get("domain", ".coursera.org"),
-            "path": c.get("path", "/"),
-            "secure": c.get("secure", True),
-        }
-
-        same_site = str(c.get("sameSite", "Lax")).lower()
-        clean["sameSite"] = "None" if same_site in ["no_restriction", "unspecified"] else same_site.capitalize()
-
-        if "expirationDate" in c:
-            clean["expires"] = float(c["expirationDate"])
-
-        result.append(clean)
-    return result
 
 
 def send_price_alert(price):

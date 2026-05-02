@@ -39,7 +39,7 @@ def get_price():
     clean_cookies = normalize_cookies(raw_cookies)    
     stripe_url = intercept_stripe_url(clean_cookies)
     stripe_url = force_locale(stripe_url)
-    
+    print(stripe_url)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept-Language": "es-MX,es;q=0.9",

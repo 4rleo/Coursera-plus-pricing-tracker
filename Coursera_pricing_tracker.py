@@ -1,92 +1,141 @@
 import smtplib
 from datetime import date
-import os, json, re
+import os, json
 import requests
 from email.mime.text import MIMEText
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+
+
+GMAIL_USER = os.getenv("GMAIL_USER")
+GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")
+GMAIL_DESTINIES = os.getenv("GMAIL_DESTINIES")
+GMAIL_ERROR_DESTINY = os.getenv("GMAIL_ERROR_DESTINY")
+COURSERA_COOKIES = os.getenv("COURSERA_COOKIES")
+DATA_FILE = os.path.join(os.path.dirname(__file__), "data.json")
+
 
 def main():
-    email = os.getenv("GMAIL_USER")
-    app_password = os.getenv("GMAIL_PASSWORD")
-    destiny = os.getenv("GMAIL_DESTINY")
-    
-    api_url = "https://api.stripe.com/v1/elements/sessions?client_secret=pi_3TNpPbBEfO1jc2fn05JSJTfJ_secret_2FcOJ5pC70eaxCga7Gh2zI0id&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=ede13da8-7229-4982-a03f-4bdb111312f5&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent" 
-    
-    price = get_price(api_url)
-    print(f"Precio detectado: {price}")
-    
-    if price is not None:
-        is_price_changed = update_json_and_check_diff(price)
-        if is_price_changed:
-            print("El precio cambió. Enviando correo...")
-            sendEmail(email=email, app_password=app_password, destiny=destiny, price=price)
-    else:
-        print("No se pudo obtener el precio.")
-
-def get_price(url):
     try:
-        cookies_raw = os.getenv("COURSERA_COOKIES")
-        if not cookies_raw:
-            return None
-            
-        cookies_list = json.loads(cookies_raw)
-        cookies_dict = {c['name']: c['value'] for c in cookies_list}
+        price = get_price()
+        print(f"Precio detectado: {price}")
 
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept-Language": "es-MX,es;q=0.9",
-            "Content-Type": "application/json",
-            "X-Requested-With": "XMLHttpRequest",
-            "Referer": "https://www.coursera.org/courseraplus"
-        }
+        if price is None:
+            raise ValueError("No se pudo obtener el precio desde la API de Stripe.")
 
-        response = requests.get(url, headers=headers, cookies=cookies_dict, timeout=15)
-        
-        if response.status_code == 200:
-            data = response.json()
-            payment_intent = data.get("payment_method_preference", {}).get("payment_intent", {})
-            amount_in_cents = payment_intent.get("amount")
-            currency = payment_intent.get("currency")
-
-            if amount_in_cents and currency == "mxn":
-                return amount_in_cents / 100
-        return None
+        save_price(price)
+        send_price_alert(price)
 
     except Exception as e:
-        print(f"Error: {e}")
-        return None
+        print(f"Error en main: {e}")
+        send_error_alert(str(e))
 
-def update_json_and_check_diff(price):
-    file_path = os.path.join(os.path.dirname(__file__), "data.json")
-    new_entry = {"price": price, "date": str(date.today())}
+
+def get_price():
+    if not COURSERA_COOKIES:
+        raise ValueError("La variable COURSERA_COOKIES no está definida.")
+
+    raw_cookies = json.loads(COURSERA_COOKIES)
+    cookies_dict = {c["name"]: c["value"] for c in raw_cookies}
+    clean_cookies = normalize_cookies(raw_cookies)
+    stripe_url = intercept_stripe_url(clean_cookies)
+
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept-Language": "es-MX,es;q=0.9",
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+        "Referer": "https://www.coursera.org/courseraplus",
+    }
+
+    response = requests.get(stripe_url, headers=headers, cookies=cookies_dict, timeout=15)
+
+    if response.status_code != 200:
+        raise ConnectionError(f"Stripe respondió con status {response.status_code}")
+
+    data = response.json()
+    payment_intent = data.get("payment_method_preference", {}).get("payment_intent", {})
+    amount_cents = payment_intent.get("amount")
+    currency = payment_intent.get("currency")
+
+    if not amount_cents or currency != "mxn":
+        raise ValueError(f"Precio no encontrado o moneda inesperada: currency={currency}, amount={amount_cents}")
+
+    return amount_cents / 100
+
+
+def intercept_stripe_url(clean_cookies):
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context()
+        context.add_cookies(clean_cookies)
+        page = context.new_page()
+
+        page.goto("https://www.coursera.org/courseraplus")
+
+        try:
+            page.click("button.css-j90x6z", timeout=10000)
+        except PlaywrightTimeoutError:
+            browser.close()
+            raise RuntimeError(
+                "No se encontró el botón de checkout. "
+                "Posiblemente las cookies caducaron o el layout de Coursera cambió."
+            )
+
+        with page.expect_request("**/api.stripe.com/**") as stripe_request:
+            pass
+
+        url = stripe_request.value.url
+        browser.close()
+        return url
+
+
+def save_price(price):
     dataset = []
 
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
             try:
                 dataset = json.load(f)
-            except:
+            except json.JSONDecodeError:
                 dataset = []
 
-    last_price = dataset[-1]["price"] if dataset else 0
-    dataset.append(new_entry)
-    
-    with open(file_path, "w") as f:
-        json.dump(dataset, f, indent=4)
-    
-    return price != last_price and last_price != 0
+    dataset.append({"price": price, "date": str(date.today())})
 
-def sendEmail(email, app_password, destiny, price):
-    if not email or not app_password or not destiny:
-        return
-    
-    html = f"""
+    with open(DATA_FILE, "w") as f:
+        json.dump(dataset, f, indent=4)
+
+
+def normalize_cookies(cookies_list):
+    result = []
+    for c in cookies_list:
+        clean = {
+            "name": c["name"],
+            "value": c["value"],
+            "domain": c.get("domain", ".coursera.org"),
+            "path": c.get("path", "/"),
+            "secure": c.get("secure", True),
+        }
+
+        same_site = str(c.get("sameSite", "Lax")).lower()
+        clean["sameSite"] = "None" if same_site in ["no_restriction", "unspecified"] else same_site.capitalize()
+
+        if "expirationDate" in c:
+            clean["expires"] = float(c["expirationDate"])
+
+        result.append(clean)
+    return result
+
+
+def send_price_alert(price):
+    subject = f"Coursera Plus: ${price} MXN"
+    body = f"""
     <html>
     <body style="font-family: Arial, sans-serif; padding: 20px;">
         <div style="max-width: 500px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
-            <h2 style="color: #2c3e50;">¡Hemos detectado un cambio en Coursera Plus!</h2>
-            <p style="font-size: 16px;">El precio actualizado es de: <b style="color: #27ae60;">${price} MXN</b></p>
+            <h2 style="color: #2c3e50;">Reporte diario — Coursera Plus</h2>
+            <p style="font-size: 16px;">Precio actual: <b style="color: #27ae60;">${price} MXN</b></p>
             <div style="margin-top: 20px;">
-                <a href="https://www.coursera.org/courseraplus" 
+                <a href="https://www.coursera.org/courseraplus"
                    style="background: #2980b9; color: white; padding: 12px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">
                    Ir a Coursera Plus
                 </a>
@@ -96,21 +145,46 @@ def sendEmail(email, app_password, destiny, price):
     </body>
     </html>
     """
-    
-    msg = MIMEText(html, "html", "utf-8")
-    msg["Subject"] = f"Coursera Plus: ${price} MXN"
-    msg["From"] = email
+    send_email(subject, body, GMAIL_DESTINIES)
+
+
+def send_error_alert(error_log):
+    subject = f"Coursera Tracker — ERROR — {date.today()}"
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; padding: 20px;">
+        <div style="max-width: 500px; margin: auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #c0392b;">Error en el tracker de Coursera Plus</h2>
+            <pre style="background: #f5f5f5; padding: 12px; border-radius: 6px; font-size: 13px; overflow-x: auto;">{error_log}</pre>
+            <p style="color: #7f8c8d; font-size: 12px; margin-top: 30px;">Aviso automático.</p>
+        </div>
+    </body>
+    </html>
+    """
+    send_email(subject, body, GMAIL_ERROR_DESTINY)
+
+
+def send_email(subject, html_body, destiny):
+    if not GMAIL_USER or not GMAIL_PASSWORD or not destiny:
+        print("Credenciales de correo no configuradas.")
+        return
+
+    msg = MIMEText(html_body, "html", "utf-8")
+    msg["Subject"] = subject
+    msg["From"] = GMAIL_USER
     msg["To"] = destiny
-    
-    recipient_list = [d.strip() for d in destiny.split(",")]
-    
+
+    recipients = [d.strip() for d in destiny.split(",")]
+
     try:
         with smtplib.SMTP("smtp.gmail.com", 587) as server:
             server.starttls()
-            server.login(email, app_password)
-            server.send_message(msg, to_addrs=recipient_list)
+            server.login(GMAIL_USER, GMAIL_PASSWORD)
+            server.send_message(msg, to_addrs=recipients)
+        print(f"Correo enviado: {subject}")
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error enviando correo: {e}")
+
 
 if __name__ == "__main__":
     main()

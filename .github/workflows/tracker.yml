@@ -2,49 +2,47 @@ name: Coursera Price Tracker
 
 on:
   schedule:
+    
     - cron: '0 15 * * *'
+  push:
+    paths:
+      - 'data_local.json'
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  track:
+  run-tracker:
     runs-on: ubuntu-latest
+    
+    env:
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
+      GMAIL_DESTINY: ${{ secrets.GMAIL_DESTINY }}
+      GMAIL_ERROR_DESTINY: ${{ secrets.GMAIL_ERROR_DESTINY }}
+      COURSERA_COOKIES: ${{ secrets.COURSERA_COOKIES }}
 
     steps:
-      - name: Checkout repo
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install Dependencies
+        run: pip install requests
 
-      - name: Install Playwright browsers
-        run: python -m playwright install chromium --with-deps
-      
-      - name: Run tracker
-        env:
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_PASSWORD: ${{ secrets.GMAIL_PASSWORD }}
-          GMAIL_DESTINIES: ${{ secrets.GMAIL_DESTINIES }}
-          GMAIL_ERROR_DESTINY: ${{ secrets.GMAIL_ERROR_DESTINY }}
-          COURSERA_COOKIES: ${{ secrets.COURSERA_COOKIES }}
-        run: python Coursera_pricing_tracker.py
-      - name: Upload screenshot
+      - name: Execute Cloud Tracker
+        run: python tracker_gha.py
+
+      - name: Run Price Comparison
+        run: python comparator.py
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-screenshot
-          path: debug.png
-      - name: Commit data.json
+
+      - name: Commit and Push Changes
         run: |
-          git config --local user.name "github-actions[bot]"
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
           git add data.json
-          git diff --staged --quiet || git commit -m "chore: update data.json [$(date +'%Y-%m-%d')]"
+          git commit -m "Update cloud price data [Skip CI]" || exit 0
           git push

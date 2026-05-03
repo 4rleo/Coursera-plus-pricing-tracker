@@ -71,29 +71,35 @@ def intercept_stripe_url(clean_cookies):
         context = browser.new_context(
             locale="es-MX",
             timezone_id="America/Mexico_City",
-            extra_http_headers={"Accept-Language": "es-MX,es;q=0.9"}
+            geolocation={"longitude": -99.1332, "latitude": 19.4326}, 
+            permissions=["geolocation"],
+            extra_http_headers={
+                "Accept-Language": "es-MX,es;q=0.9",
+                "X-Forwarded-For": "189.203.0.1" 
+            }
         )
         context.add_cookies(clean_cookies)
         page = context.new_page()
-        page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
-        try:
-            with page.expect_request("**/api.stripe.com/v1/payment_pages/**", timeout=15000) as stripe_request:
-                button = page.get_by_role("button").filter(has_text="Suscribirse")
-                if button.count() > 0:
-                    button.first.click()
-                else:
-                    page.click("button.css-j90x6z")
-                    
-            url = stripe_request.value.url
-            browser.close()
-            return url
 
+        page.goto("https://www.coursera.org/courseraplus")
+        text = page.locator(".css-j90x6z").inner_text()
+        print(text)
+        try:
+            page.click("button.css-j90x6z", timeout=10000)
+            
         except PlaywrightTimeoutError:
             browser.close()
             raise RuntimeError(
-                "Timeout: No se detectó la llamada a Stripe. "
-                "Revisa si el botón de 'Suscribirse' es el correcto o si las cookies siguen vivas."
+                "No se encontró el botón de checkout. "
+                "Posiblemente las cookies caducaron o el layout de Coursera cambió."
             )
+
+        with page.expect_request("**/api.stripe.com/**") as stripe_request:
+            pass
+
+        url = stripe_request.value.url
+        browser.close()
+        return url
 
 def force_locale(url, locale="es-LA"):
     parsed = urlparse(url)

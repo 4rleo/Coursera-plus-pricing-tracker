@@ -14,7 +14,7 @@ DATA_FILE = "data.json"
 
 def main():
     
-    carrito_url = "https://www.coursera.org/payments/checkout?cartId=665804560"
+    carrito_url = "https://www.coursera.org/api/carts.v2/665807904"
     
     try:
         

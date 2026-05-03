@@ -70,39 +70,30 @@ def intercept_stripe_url(clean_cookies):
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
             locale="es-MX",
+            timezone_id="America/Mexico_City",
             extra_http_headers={"Accept-Language": "es-MX,es;q=0.9"}
         )
         context.add_cookies(clean_cookies)
         page = context.new_page()
-
-        page.goto("https://www.coursera.org/courseraplus")
-        
-        text = page.locator(".css-j90x6z").inner_text()
-        print(text)
+        page.goto("https://www.coursera.org/courseraplus", wait_until="networkidle")
         try:
-            page.click("button.css-j90x6z", timeout=10000)
-            state = page.evaluate("() => window.__INITIAL_STATE__ || window.App.state")
+            with page.expect_request("**/api.stripe.com/v1/payment_pages/**", timeout=15000) as stripe_request:
+                button = page.get_by_role("button").filter(has_text="Suscribirse")
+                if button.count() > 0:
+                    button.first.click()
+                else:
+                    page.click("button.css-j90x6z")
+                    
+            url = stripe_request.value.url
+            browser.close()
+            return url
 
-            try:
-                precio = state['context']['dispatcher']['stores']['CheckoutStore']['basePrice']
-                moneda = state['context']['dispatcher']['stores']['CheckoutStore']['currencyCode']
-                print(f"Detectado: {precio} {moneda}")
-            except:
-                with open("debug_state.json", "w") as f:
-                    json.dump(state, f)
         except PlaywrightTimeoutError:
             browser.close()
             raise RuntimeError(
-                "No se encontró el botón de checkout. "
-                "Posiblemente las cookies caducaron o el layout de Coursera cambió."
+                "Timeout: No se detectó la llamada a Stripe. "
+                "Revisa si el botón de 'Suscribirse' es el correcto o si las cookies siguen vivas."
             )
-
-        with page.expect_request("**/api.stripe.com/**") as stripe_request:
-            pass
-
-        url = stripe_request.value.url
-        browser.close()
-        return url
 
 def force_locale(url, locale="es-LA"):
     parsed = urlparse(url)

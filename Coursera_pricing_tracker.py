@@ -57,9 +57,25 @@ def get_price_from_api(url):
     return None
 
 def save_json(filename, price):
-    entry = {"price": price, "date": str(date.today())}
+    new_entry = {"price": price, "date": str(date.today())}
+    
+    if os.path.exists(filename):
+        try:
+            with open(filename, "r") as f:
+                content = json.load(f)
+                if not isinstance(content, list):
+                    history = [content]
+                else:
+                    history = content
+        except json.JSONDecodeError:
+            history = []
+    else:
+        history = []
+
+    history.append(new_entry)
+
     with open(filename, "w") as f:
-        json.dump(entry, f, indent=4)
+        json.dump(history, f, indent=4)
 
 def send_email(subject, body, destiny):
     if not GMAIL_USER or not destiny: return

@@ -82,8 +82,7 @@ def intercept_stripe_url(clean_cookies):
         page = context.new_page()
 
         page.goto("https://www.coursera.org/courseraplus")
-        text = page.locator(".css-j90x6z").inner_text()
-        print(text)
+        
         try:
             page.click("button.css-j90x6z", timeout=10000)
             

@@ -3,7 +3,7 @@ name: Coursera Price Tracker
 on:
   schedule:
     
-    - cron: '0 15 * * *'
+    - cron: '0 09 * * *'
   push:
     
     paths:

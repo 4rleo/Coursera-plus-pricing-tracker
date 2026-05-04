@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 
 GMAIL_USER = os.getenv("GMAIL_USER")
 GMAIL_PASSWORD = os.getenv("GMAIL_PASSWORD")
-GMAIL_DESTINY = os.getenv("GMAIL_DESTINY")
+GMAIL_DESTINY = os.getenv("GMAIL_DESTINIES")
 GMAIL_ERROR_DESTINY = os.getenv("GMAIL_ERROR_DESTINY")
 COURSERA_COOKIES = os.getenv("COURSERA_COOKIES")
 DATA_FILE = "data.json"

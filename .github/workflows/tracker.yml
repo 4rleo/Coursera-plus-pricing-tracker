@@ -3,12 +3,9 @@ name: Coursera Price Tracker
 on:
   schedule:
     
-    - cron: '0 09 * * *'
-  push:
-    
-    paths:
-      - 'data_local.json'
-  workflow_dispatch:
+    - cron: '0 9 * * *'
+  
+  workflow_dispatch: 
 
 jobs:
   run-tracker:
@@ -20,10 +17,11 @@ jobs:
       GMAIL_DESTINY: ${{ secrets.GMAIL_DESTINY }}
       GMAIL_ERROR_DESTINY: ${{ secrets.GMAIL_ERROR_DESTINY }}
       COURSERA_COOKIES: ${{ secrets.COURSERA_COOKIES }}
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,10 +29,11 @@ jobs:
           python-version: '3.10'
 
       - name: Install Dependencies
-        run: pip install requests
+        run: |
+          pip install requests
+          # Si tu script de nube usa algo más, agrégalo aquí
 
       - name: Execute Cloud Tracker
-        
         run: python Coursera_pricing_tracker.py
 
       - name: Run Price Comparison
@@ -45,6 +44,7 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data.json
-          git commit -m "Update cloud price data [Skip CI]" || exit 0
+          # Añadimos ambos archivos por si hubo correcciones en el comparador
+          git add data.json data_local.json
+          git commit -m "Update cloud price data [skip ci]" || exit 0
           git push

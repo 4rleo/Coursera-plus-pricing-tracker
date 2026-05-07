@@ -15,48 +15,97 @@ def build_email_html(price, prev_price=None, prev_date=None):
     if prev_price is not None:
         diff = price - prev_price
         diff_str = f"+${diff:,.2f}" if diff > 0 else f"-${abs(diff):,.2f}"
-        diff_color = "#e74c3c" if diff > 0 else "#2ecc71"
+        diff_color = "#dc2626" if diff > 0 else "#16a34a"
+        diff_bg = "#fef2f2" if diff > 0 else "#f0fdf4"
+        diff_border = "#fecaca" if diff > 0 else "#bbf7d0"
+        arrow = "↑" if diff > 0 else ("↓" if diff < 0 else "→")
         comparison_block = f"""
-        <div style="margin-top:20px; padding:15px; background:#1e1e2e; border-radius:8px;">
-            <p style="color:#888; margin:0 0 8px 0; font-size:13px;">PRECIO ANTERIOR LOCAL</p>
-            <p style="color:#ccc; font-size:22px; margin:0;">${prev_price:,.2f} MXN</p>
-            
-            <p style="color:{diff_color}; font-size:18px; font-weight:bold; margin:0;">{diff_str} MXN</p>
-        </div>
+        <tr>
+            <td style="padding:0 32px 28px 32px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:{diff_bg}; border:1px solid {diff_border}; border-radius:12px;">
+                    <tr>
+                        <td style="padding:18px 20px;">
+                            <p style="color:#6b7280; margin:0 0 10px 0; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase;">Comparación con precio local</p>
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td>
+                                        <p style="color:#374151; font-size:13px; margin:0 0 2px 0;">Precio anterior</p>
+                                        <p style="color:#111827; font-size:20px; font-weight:700; margin:0;">${prev_price:,.2f} <span style="font-size:13px; color:#6b7280; font-weight:400;">MXN</span></p>
+                                        <p style="color:#9ca3af; font-size:11px; margin:4px 0 0 0;">{prev_date}</p>
+                                    </td>
+                                    <td style="text-align:right; vertical-align:middle;">
+                                        <p style="color:{diff_color}; font-size:26px; font-weight:800; margin:0;">{arrow} {diff_str}</p>
+                                        <p style="color:{diff_color}; font-size:11px; margin:2px 0 0 0; opacity:0.8;">MXN</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
         """
     else:
-        comparison_block = """
-        <div style="margin-top:20px; padding:15px; background:#1e1e2e; border-radius:8px;">
-            <p style="color:#888; margin:0; font-size:13px;">Sin precio anterior registrado.</p>
-        </div>
+        comparison_block = f"""
+        <tr>
+            <td style="padding:0 32px 28px 32px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px;">
+                    <tr>
+                        <td style="padding:16px 20px;">
+                            <p style="color:#9ca3af; margin:0; font-size:13px;">Sin precio local registrado para comparar.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
         """
 
     return f"""
+    <!DOCTYPE html>
     <html>
-    <body style="margin-top:10vh; padding:0; background:#13131f; font-family:'Segoe UI', sans-serif;">
-        <div style="max-width:480px; margin:40px auto; background:#1a1a2e; border-radius:16px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-            
-            <div style="background:#0070f3; padding:28px 32px;">
-                <p style="color:rgba(255,255,255,0.8); margin:0 0 4px 0; font-size:13px; letter-spacing:2px; text-transform:uppercase;">Coursera Plus</p>
-                <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Reporte de Precio</h1>
-            </div>
+    <body style="margin:0; padding:0; background:#f3f4f6; font-family:'Segoe UI', Arial, sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6; padding:40px 16px;">
+            <tr>
+                <td align="center">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+                        
+                        <tr>
+                            <td style="background:#2563eb; padding:28px 32px;">
+                                <p style="color:rgba(255,255,255,0.7); margin:0 0 4px 0; font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase;">Coursera Plus · Monitor</p>
+                                <h1 style="color:#ffffff; margin:0; font-size:22px; font-weight:700;">Reporte de Precio</h1>
+                            </td>
+                        </tr>
 
-            <div style="padding:28px 32px;">
-                <p style="color:#888; margin:0 0 8px 0; font-size:13px; letter-spacing:1px;">PRECIO ACTUAL</p>
-                <p style="color:white; font-size:38px; font-weight:800; margin:0;">${price:,.2f} <span style="font-size:18px; color:#aaa;">MXN</span></p>
-                <p style="color:#666; font-size:12px; margin:6px 0 0 0;">Detectado el {date.today().strftime('%d %b %Y')}</p>
+                        <tr>
+                            <td style="padding:28px 32px 20px 32px;">
+                                <p style="color:#6b7280; margin:0 0 6px 0; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase;">Precio actual</p>
+                                <p style="color:#111827; font-size:42px; font-weight:800; margin:0; line-height:1;">${price:,.2f} <span style="font-size:18px; color:#9ca3af; font-weight:400;">MXN</span></p>
+                                <p style="color:#9ca3af; font-size:12px; margin:8px 0 0 0;">Detectado el {date.today().strftime('%d de %B de %Y')}</p>
+                            </td>
+                        </tr>
 
-                {comparison_block}
-            </div>
+                        <tr>
+                            <td style="padding:0 32px 24px 32px;">
+                                <hr style="border:none; border-top:1px solid #e5e7eb; margin:0 0 24px 0;">
+                            </td>
+                        </tr>
 
-            <div style="padding:16px 32px; background:#13131f;">
-                <p style="color:#444; font-size:11px; margin:0; text-align:center;">Generado automáticamente · GitHub Actions</p>
-            </div>
-        </div>
+                        {comparison_block}
+
+                        <tr>
+                            <td style="background:#f9fafb; padding:14px 32px; border-top:1px solid #e5e7eb;">
+                                <p style="color:#9ca3af; font-size:11px; margin:0; text-align:center;">Generado automáticamente · GitHub Actions</p>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
     </body>
     </html>
     """
-
+    
 def main():
     api_url = "https://www.coursera.org/api/carts.v2/665807904"
 

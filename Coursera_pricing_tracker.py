@@ -78,10 +78,13 @@ def save_json(filename, price):
         json.dump(history, f, indent=4)
 
 def send_email(subject, body, destiny):
+    print(f"[send_email] USER={GMAIL_USER!r}, DESTINY={destiny!r}")  
     if not GMAIL_USER or not destiny:
+        print("[send_email] Abortado: USER o DESTINY está vacío")
         return
 
     recipients = [d.strip() for d in destiny.split(",")]
+    print(f"[send_email] Recipients: {recipients}")  
 
     msg = MIMEText(body, "html")
     msg["Subject"] = subject
@@ -93,8 +96,9 @@ def send_email(subject, body, destiny):
             server.starttls()
             server.login(GMAIL_USER, GMAIL_PASSWORD)
             server.send_message(msg, to_addrs=recipients)
+            print("[send_email] Correo enviado OK")  
     except Exception as e:
-        print(f"Error enviando correo: {e}")
+        print(f"[send_email] ERROR: {e}")  
 
 if __name__ == "__main__":
     main()

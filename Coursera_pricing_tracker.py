@@ -18,9 +18,9 @@ def build_email_html(price, prev_price=None, prev_date=None):
         diff_color = "#e74c3c" if diff > 0 else "#2ecc71"
         comparison_block = f"""
         <div style="margin-top:20px; padding:15px; background:#1e1e2e; border-radius:8px;">
-            <p style="color:#888; margin:0 0 8px 0; font-size:13px;">PRECIO ANTERIOR</p>
+            <p style="color:#888; margin:0 0 8px 0; font-size:13px;">PRECIO ANTERIOR LOCAL</p>
             <p style="color:#ccc; font-size:22px; margin:0;">${prev_price:,.2f} MXN</p>
-            <p style="color:#888; font-size:12px; margin:4px 0 12px 0;">{prev_date}</p>
+            
             <p style="color:{diff_color}; font-size:18px; font-weight:bold; margin:0;">{diff_str} MXN</p>
         </div>
         """
@@ -33,10 +33,10 @@ def build_email_html(price, prev_price=None, prev_date=None):
 
     return f"""
     <html>
-    <body style="margin:0; padding:0; background:#13131f; font-family:'Segoe UI', sans-serif;">
+    <body style="margin-top:10vh; padding:0; background:#13131f; font-family:'Segoe UI', sans-serif;">
         <div style="max-width:480px; margin:40px auto; background:#1a1a2e; border-radius:16px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
             
-            <div style="background:linear-gradient(135deg, #0070f3, #00c6ff); padding:28px 32px;">
+            <div style="background:#0070f3; padding:28px 32px;">
                 <p style="color:rgba(255,255,255,0.8); margin:0 0 4px 0; font-size:13px; letter-spacing:2px; text-transform:uppercase;">Coursera Plus</p>
                 <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Reporte de Precio</h1>
             </div>

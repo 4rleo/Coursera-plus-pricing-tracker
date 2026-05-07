@@ -11,16 +11,73 @@ GMAIL_ERROR_DESTINY = os.getenv("GMAIL_ERROR_DESTINY")
 COURSERA_COOKIES = os.getenv("COURSERA_COOKIES")
 DATA_FILE = "data.json"
 
+def build_email_html(price, prev_price=None, prev_date=None):
+    if prev_price is not None:
+        diff = price - prev_price
+        diff_str = f"+${diff:,.2f}" if diff > 0 else f"-${abs(diff):,.2f}"
+        diff_color = "#e74c3c" if diff > 0 else "#2ecc71"
+        comparison_block = f"""
+        <div style="margin-top:20px; padding:15px; background:#1e1e2e; border-radius:8px;">
+            <p style="color:#888; margin:0 0 8px 0; font-size:13px;">PRECIO ANTERIOR</p>
+            <p style="color:#ccc; font-size:22px; margin:0;">${prev_price:,.2f} MXN</p>
+            <p style="color:#888; font-size:12px; margin:4px 0 12px 0;">{prev_date}</p>
+            <p style="color:{diff_color}; font-size:18px; font-weight:bold; margin:0;">{diff_str} MXN</p>
+        </div>
+        """
+    else:
+        comparison_block = """
+        <div style="margin-top:20px; padding:15px; background:#1e1e2e; border-radius:8px;">
+            <p style="color:#888; margin:0; font-size:13px;">Sin precio anterior registrado.</p>
+        </div>
+        """
+
+    return f"""
+    <html>
+    <body style="margin:0; padding:0; background:#13131f; font-family:'Segoe UI', sans-serif;">
+        <div style="max-width:480px; margin:40px auto; background:#1a1a2e; border-radius:16px; overflow:hidden; box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+            
+            <div style="background:linear-gradient(135deg, #0070f3, #00c6ff); padding:28px 32px;">
+                <p style="color:rgba(255,255,255,0.8); margin:0 0 4px 0; font-size:13px; letter-spacing:2px; text-transform:uppercase;">Coursera Plus</p>
+                <h1 style="color:white; margin:0; font-size:22px; font-weight:700;">Reporte de Precio</h1>
+            </div>
+
+            <div style="padding:28px 32px;">
+                <p style="color:#888; margin:0 0 8px 0; font-size:13px; letter-spacing:1px;">PRECIO ACTUAL</p>
+                <p style="color:white; font-size:38px; font-weight:800; margin:0;">${price:,.2f} <span style="font-size:18px; color:#aaa;">MXN</span></p>
+                <p style="color:#666; font-size:12px; margin:6px 0 0 0;">Detectado el {date.today().strftime('%d %b %Y')}</p>
+
+                {comparison_block}
+            </div>
+
+            <div style="padding:16px 32px; background:#13131f;">
+                <p style="color:#444; font-size:11px; margin:0; text-align:center;">Generado automáticamente · GitHub Actions</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
 def main():
     api_url = "https://www.coursera.org/api/carts.v2/665807904"
-    
+
     try:
         price = get_price_from_api(api_url)
-        
+
         if price is not None:
             print(f"Precio detectado: {price} MXN")
+
+            prev_price, prev_date = None, None
+            if os.path.exists(DATA_FILE):
+                with open(DATA_FILE, "r") as f:
+                    history = json.load(f)
+                    if isinstance(history, list) and len(history) > 0:
+                        last = history[-1]
+                        prev_price = last.get("price")
+                        prev_date = last.get("date")
+
             save_json(DATA_FILE, price)
-            send_email(f"Reporte GHA: ${price} MXN", f"Precio capturado desde API: ${price} MXN", GMAIL_DESTINY)
+            html = build_email_html(price, prev_price, prev_date)
+            send_email(f"Reporte GHA: ${price} MXN", html, GMAIL_DESTINY)
         else:
             raise ValueError("No se pudo extraer 'totalCartAmount' del JSON de la API.")
 
@@ -31,7 +88,7 @@ def main():
 def get_price_from_api(url):
     if not COURSERA_COOKIES:
         raise ValueError("Error: COURSERA_COOKIES no está configurado en los Secrets.")
-    
+
     cookies_list = json.loads(COURSERA_COOKIES)
     cookies_dict = {c['name']: c['value'] for c in cookies_list}
 
@@ -42,7 +99,7 @@ def get_price_from_api(url):
     }
 
     response = requests.get(url, headers=headers, cookies=cookies_dict, timeout=15)
-    
+
     if response.status_code == 200:
         data = response.json()
         try:
@@ -53,12 +110,12 @@ def get_price_from_api(url):
             return None
     else:
         print(f"Error de API: Status {response.status_code}")
-            
+
     return None
 
 def save_json(filename, price):
     new_entry = {"price": price, "date": str(date.today())}
-    
+
     if os.path.exists(filename):
         try:
             with open(filename, "r") as f:
@@ -78,13 +135,13 @@ def save_json(filename, price):
         json.dump(history, f, indent=4)
 
 def send_email(subject, body, destiny):
-    print(f"[send_email] USER={GMAIL_USER!r}, DESTINY={destiny!r}")  
+    print(f"[send_email] USER={GMAIL_USER!r}, DESTINY={destiny!r}")
     if not GMAIL_USER or not destiny:
         print("[send_email] Abortado: USER o DESTINY está vacío")
         return
 
     recipients = [d.strip() for d in destiny.split(",")]
-    print(f"[send_email] Recipients: {recipients}")  
+    print(f"[send_email] Recipients: {recipients}")
 
     msg = MIMEText(body, "html")
     msg["Subject"] = subject
@@ -96,9 +153,9 @@ def send_email(subject, body, destiny):
             server.starttls()
             server.login(GMAIL_USER, GMAIL_PASSWORD)
             server.send_message(msg, to_addrs=recipients)
-            print("[send_email] Correo enviado OK")  
+            print("[send_email] Correo enviado OK")
     except Exception as e:
-        print(f"[send_email] ERROR: {e}")  
+        print(f"[send_email] ERROR: {e}")
 
 if __name__ == "__main__":
     main()

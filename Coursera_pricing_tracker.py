@@ -31,7 +31,7 @@ def build_email_html(price, prev_price=None, prev_date=None):
                                     <td>
                                         <p style="color:#374151; font-size:13px; margin:0 0 2px 0;">Precio anterior</p>
                                         <p style="color:#111827; font-size:20px; font-weight:700; margin:0;">${prev_price:,.2f} <span style="font-size:13px; color:#6b7280; font-weight:400;">MXN</span></p>
-                                        <p style="color:#9ca3af; font-size:11px; margin:4px 0 0 0;">{prev_date}</p>
+                                        
                                     </td>
                                     <td style="text-align:right; vertical-align:middle;">
                                         <p style="color:{diff_color}; font-size:26px; font-weight:800; margin:0;">{arrow} {diff_str}</p>

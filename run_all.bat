@@ -1,9 +1,9 @@
 @echo off
 chcp 65001 > nul
-cd /d "C:\Users\lazar\OneDrive\Escritorio\a\Coursera-Pricing-Tracker"
+cd /d "ruta"
 
 echo [1/3] Extrayendo precio local...
-".\venv\Scripts\python.exe" test.py
+".\venv\Scripts\python.exe" local.py
 
 echo [2/3] Ejecutando comparador...
 ".\venv\Scripts\python.exe" comparator.py

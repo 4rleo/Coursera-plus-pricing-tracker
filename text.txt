@@ -1,9 +1,0 @@
-buena = pi_3TSlq3BEfO1jc2fn12j81TsM_secret_8DvqpHpyvHijOFeXqyOO9wFTU
-        pi_3TSmckBEfO1jc2fn0TJTOwIB_secret_QSYFB1sbkcpwaRnPYi2kQayWJ
-
-antigua_api_url = "https://api.stripe.com/v1/elements/sessions?client_secret=pi_3TNpPbBEfO1jc2fn05JSJTfJ_secret_2FcOJ5pC70eaxCga7Gh2zI0id&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=ede13da8-7229-4982-a03f-4bdb111312f5&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent" 
-                   https://api.stripe.com/v1/elements/sessions?client_secret=pi_3TSmckBEfO1jc2fn0TJTOwIB_secret_QSYFB1sbkcpwaRnPYi2kQayWJ&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=93f853d5-828f-4a33-af04-e9d00b220535&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent 
-malaa = pi_3TSmM2BEfO1jc2fn051F86HT_secret_Nl976k3ZKQCTGY0hBBmHufMcS
-
-
-https://api.stripe.com/v1/elements/sessions?client_secret=pi_3TSlq3BEfO1jc2fn12j81TsM_secret_8DvqpHpyvHijOFeXqyOO9wFTU&key=pk_live_51MZeRpBEfO1jc2fnXqfGeAjDZ83rmeS3YQu3G1NYIBWUvlsIthQwVBTO52HMoB3ORJpbsYBqFiKLw0UIqsAhbQK100PzRQTfLV&elements_init_source=stripe.elements&referrer_host=www.coursera.org&stripe_js_id=ede13da8-7229-4982-a03f-4bdb111312f5&locale=es-LA&expand[0]=payment_method_preference.payment_intent.payment_method&type=payment_intent

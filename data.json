@@ -327,5 +327,10 @@
         "price": 2295.0,
         "date": "2026-06-08",
         "corrected": true
+    },
+    {
+        "price": 2295.0,
+        "date": "2026-06-09",
+        "corrected": true
     }
 ]

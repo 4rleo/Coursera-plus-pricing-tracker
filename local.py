@@ -6,11 +6,8 @@ import re
 from email.mime.text import MIMEText
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
-GMAIL_USER = "cpricingtracker@gmail.com"
-GMAIL_PASSWORD = "vgqfsrquhzyobqty"
-GMAIL_ERROR_DESTINY = "rodriguezcervantessebastian30@gmail.com"
-GMAIL_DESTINIES = "rodriguezcervantessebastian30@gmail.com, rodriguezcervant3sseb4stian@gmail.com"
-COURSERA_COOKIES = "cookie.json"
+
+
 DATA_FILE = os.path.join(os.path.dirname(__file__), "data_local.json")
 
 def main():

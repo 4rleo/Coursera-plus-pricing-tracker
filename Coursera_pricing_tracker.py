@@ -107,8 +107,10 @@ def build_email_html(price, prev_price=None, prev_date=None):
     """
     
 def main():
-    api_url = "https://www.coursera.org/api/carts.v2/665807904"
-
+    API_FILE = open("API_URL.txt", 'r')
+    api_url = API_FILE.read()
+    API_FILE.close()
+    
     try:
         price = get_price_from_api(api_url)
 

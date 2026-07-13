@@ -36,10 +36,6 @@ jobs:
       - name: Execute Cloud Tracker
         run: python Coursera_pricing_tracker.py
 
-      - name: Run Price Comparison
-        run: python comparator.py
-        if: always() 
-
       - name: Commit and Push Changes
         run: |
           git config --local user.email "action@github.com"

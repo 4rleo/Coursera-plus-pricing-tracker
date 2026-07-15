@@ -192,7 +192,7 @@ def send_email(subject, body, destiny):
         return
 
     recipients = [d.strip() for d in destiny.split(",")]
-    print(f"[send_email] Recipients: {recipients}")
+    
 
     msg = MIMEText(body, "html")
     msg["Subject"] = subject
